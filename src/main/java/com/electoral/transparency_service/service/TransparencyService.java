@@ -11,6 +11,7 @@ import com.electoral.transparency_service.dto.RecordResponse;
 import com.electoral.transparency_service.dto.TransparencyResponse;
 import com.electoral.transparency_service.entity.TransparencyRecord;
 import com.electoral.transparency_service.exception.ResourceNotFoundException;
+import com.electoral.transparency_service.mapper.TransparencyMapper;
 import com.electoral.transparency_service.repository.TransparencyRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class TransparencyService {
 
     private final TransparencyRepository repository;
     private final RedisCacheAdapter cache;
+    private final TransparencyMapper mapper;
 
     private static final Logger log = LoggerFactory.getLogger(TransparencyService.class);
 
@@ -28,10 +30,16 @@ public class TransparencyService {
 
         String key = "transparency:" + electionId;
 
-        Object cached = cache.get(key);
+        TransparencyResponse cached = null;
+        try {
+            cached = cache.get(key, TransparencyResponse.class);
+        } catch (Exception e) {
+            log.warn("CACHE ERROR (ignored) - electionId={}", electionId);
+        }
+
         if (cached != null) {
             log.info("CACHE HIT - electionId={}", electionId);
-            return (TransparencyResponse) cached;
+            return cached;
         }
 
         log.info("CACHE MISS - querying DB - electionId={}", electionId);
@@ -42,20 +50,18 @@ public class TransparencyService {
             throw new ResourceNotFoundException("No records found");
         }
 
-        List<RecordResponse> responseList = records.stream()
-                .map(r -> new RecordResponse(
-                        r.getEventType(),
-                        r.getDescription(),
-                        r.getTimestamp()
-                ))
-                .toList();
+        List<RecordResponse> responseList = mapper.toRecordResponseList(records);
 
         TransparencyResponse response = TransparencyResponse.builder()
                 .electionId(electionId)
                 .records(responseList)
                 .build();
 
-        cache.set(key, response);
+        try {
+            cache.set(key, response);
+        } catch (Exception e) {
+            log.warn("CACHE STORE ERROR (ignored) - electionId={}", electionId);
+        }
 
         return response;
     }

@@ -2,8 +2,10 @@ services:
   postgres:
     image: postgres:14
     container_name: postgres-transparency
-    network_mode: "host"
+    ports:
+      - "5433:5432"   
     environment:
+      POSTGRES_DB: transparency_db
       POSTGRES_USER: transparency_user
       POSTGRES_PASSWORD: 123456
     volumes:
