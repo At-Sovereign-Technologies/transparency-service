@@ -1,3 +1,21 @@
-INSERT INTO transparency_record (election_id, event_type, description, timestamp) VALUES
-(1, 'ACTA_REGISTRADA', 'Acta subida desde mesa 101', NOW()),
-(1, 'RESULTADO_VALIDADO', 'Validación completada', NOW());
+INSERT INTO transparency_record (election_id, event_type, description, timestamp)
+SELECT 
+    1,
+
+    (
+        ARRAY[
+            'ACTA_REGISTRADA',
+            'RESULTADO_VALIDADO',
+            'ACTA_CORREGIDA',
+            'RECUENTO_SOLICITADO',
+            'RECUENTO_FINALIZADO',
+            'AUDITORIA_INICIADA',
+            'AUDITORIA_COMPLETADA'
+        ]
+    )[floor(random()*7 + 1)],
+
+    'Evento electoral en mesa ' || (gs % 200),
+
+    NOW() - (gs || ' minutes')::interval
+
+FROM generate_series(1, 200) gs;
