@@ -3,7 +3,7 @@ services:
     image: postgres:14
     container_name: postgres-transparency
     ports:
-      - "5433:5432"   
+      - "5432:5432"   
     environment:
       POSTGRES_DB: transparency_db
       POSTGRES_USER: transparency_user
