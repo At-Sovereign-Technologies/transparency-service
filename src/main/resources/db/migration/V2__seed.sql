@@ -1,6 +1,6 @@
 INSERT INTO transparency_record (election_id, event_type, description, timestamp)
 SELECT 
-    1,
+    e_id,
 
     (
         ARRAY[
@@ -14,8 +14,9 @@ SELECT
         ]
     )[floor(random()*7 + 1)],
 
-    'Evento electoral en mesa ' || (gs % 200),
+    'Evento en mesa ' || (gs % 200),
 
     NOW() - (gs || ' minutes')::interval
 
-FROM generate_series(1, 200) gs;
+FROM generate_series(1, 300) gs,
+     generate_series(1, 5) e_id;
