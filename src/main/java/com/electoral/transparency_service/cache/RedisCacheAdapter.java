@@ -1,11 +1,13 @@
 package com.electoral.transparency_service.cache;
 
+import java.time.Duration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -14,26 +16,24 @@ public class RedisCacheAdapter {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private final ObjectMapper mapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+    private static final Logger log = LoggerFactory.getLogger(RedisCacheAdapter.class);
 
-    public void set(String key, Object value) {
-        try {
-            String json = mapper.writeValueAsString(value);
-            redisTemplate.opsForValue().set(key, json);
-        } catch (Exception e) {
-            throw new RuntimeException("Error serializing cache", e);
-        }
+    @CircuitBreaker(name = "redisCache", fallbackMethod = "getFallback")
+    public Object get(String key) {
+        return redisTemplate.opsForValue().get(key);
     }
 
-    public <T> T get(String key, Class<T> clazz) {
-        try {
-            Object data = redisTemplate.opsForValue().get(key);
-            if (data == null) return null;
+    public Object getFallback(String key, Throwable t) {
+        log.warn("CACHE FALLBACK (GET) - key={} - {}", key, t.getMessage());
+        return null;
+    }
 
-            return mapper.readValue(data.toString(), clazz);
-        } catch (Exception e) {
-            throw new RuntimeException("Error deserializing cache", e);
-        }
+    @CircuitBreaker(name = "redisCache", fallbackMethod = "setFallback")
+    public void set(String key, Object value) {
+        redisTemplate.opsForValue().set(key, value, Duration.ofMinutes(5));
+    }
+
+    public void setFallback(String key, Object value, Throwable t) {
+        log.warn("CACHE FALLBACK (SET) - key={} - {}", key, t.getMessage());
     }
 }
