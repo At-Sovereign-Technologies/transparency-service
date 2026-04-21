@@ -5,22 +5,29 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.electoral.transparency_service.dto.RecordResponse;
+import com.electoral.transparency_service.dto.TransparencyResponse;
 import com.electoral.transparency_service.entity.TransparencyRecord;
 
 @Component
 public class TransparencyMapper {
 
-    public RecordResponse toRecordResponse(TransparencyRecord record) {
-        return new RecordResponse(
-                record.getEventType(),
-                record.getDescription(),
-                record.getTimestamp()
-        );
-    }
-
     public List<RecordResponse> toRecordResponseList(List<TransparencyRecord> records) {
         return records.stream()
-                .map(this::toRecordResponse)
+                .map(r -> new RecordResponse(
+                        r.getEventType(), 
+                        r.getDescription(), 
+                        r.getTimestamp()
+                ))
                 .toList();
+    }
+
+    public TransparencyResponse toResponse(Long electionId, List<TransparencyRecord> records) {
+
+        List<RecordResponse> responseList = toRecordResponseList(records);
+
+        return TransparencyResponse.builder()
+                .electionId(electionId)
+                .records(responseList)
+                .build();
     }
 }
