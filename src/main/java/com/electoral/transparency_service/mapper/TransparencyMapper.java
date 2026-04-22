@@ -30,4 +30,25 @@ public class TransparencyMapper {
                 .records(responseList)
                 .build();
     }
+
+    public TransparencyResponse toResponse(
+        Long electionId,
+        List<TransparencyRecord> records,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages
+) {
+
+    List<RecordResponse> responseList = toRecordResponseList(records);
+
+        return TransparencyResponse.builder()
+                .electionId(electionId)
+                .records(responseList)
+                .page(page)
+                .size(size)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .build();
+    }
 }

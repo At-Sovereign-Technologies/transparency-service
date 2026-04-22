@@ -10,4 +10,8 @@ import lombok.Data;
 public class TransparencyResponse {
     private Long electionId;
     private List<RecordResponse> records;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 }
