@@ -141,15 +141,16 @@ http://localhost:8084/swagger-ui.html
 
 ------------------------------------------------------------------------
 
-## 13. Endpoint
+## 13. Endpoint (Paginado)
 
-GET /api/v1/transparency?electionId=1
+GET /api/v1/transparency?electionId=1&page=0&size=5
 
 ------------------------------------------------------------------------
 
-## 14. Respuesta
+## 14. Respuesta (Paginada)
 
-{ "electionId": 1, "records": \[ { "eventType": "ACTA_REGISTRADA",
+{ "electionId": 1, "page": 0, "size": 5, "totalElements": 20,
+"totalPages": 4, "records": \[ { "eventType": "ACTA_REGISTRADA",
 "description": "Acta subida desde mesa 101", "timestamp":
 "2026-01-01T10:00:00" } \] }
 
@@ -176,4 +177,6 @@ Microservicio funcional, resiliente y listo para integración:
 -   PostgreSQL integrado
 -   Redis con tolerancia a fallos
 -   Circuit Breaker activo
+-   Paginación implementada a nivel de base de datos
+-   Cache distribuido por página
 -   Documentación Swagger
