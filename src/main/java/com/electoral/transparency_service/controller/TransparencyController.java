@@ -24,8 +24,11 @@ public class TransparencyController {
     public TransparencyResponse getTransparency(
             @RequestParam
             @Pattern(regexp = "^[0-9]+$", message = "electionId must be numeric")
-            String electionId
+            String electionId,
+
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        return service.getRecords(Long.parseLong(electionId));
+        return service.getRecords(Long.parseLong(electionId), page, size);
     }
 }
