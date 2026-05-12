@@ -1,13 +1,13 @@
 package com.electoral.transparency_service.entity;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.electoral.transparency_service.enums.OriginComponent;
+import com.electoral.transparency_service.enums.Severity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class TransparencyRecord {
 
     @Id
@@ -28,5 +29,18 @@ public class TransparencyRecord {
 
     private String description;
 
+    @Column(name = "record_timestamp")
     private LocalDateTime timestamp;
+
+    @Enumerated(EnumType.STRING)
+    private OriginComponent provider;
+
+    @Enumerated(EnumType.STRING)
+    private Severity severity;
+
+    @Lob
+    private String details;
+
+    @Column(name = "event_timestamp")
+    private Instant eventTimestamp;
 }
