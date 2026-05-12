@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 
 @RestController
+@CrossOrigin(originPatterns = "*")
 @RequestMapping("/api/v1/transparency")
 @RequiredArgsConstructor
 @Validated
