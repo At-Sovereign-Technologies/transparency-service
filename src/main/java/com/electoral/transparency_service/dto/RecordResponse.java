@@ -11,4 +11,6 @@ public class RecordResponse {
     private String eventType;
     private String description;
     private LocalDateTime timestamp;
+    private Integer riskScore;
+    private String algorithmVersion;
 }

@@ -18,4 +18,6 @@ public class EventCreatedResponse {
     private Long eventId;
     private Instant timestamp;
     private String message;
+    private Integer riskScore;
+    private String algorithmVersion;
 }

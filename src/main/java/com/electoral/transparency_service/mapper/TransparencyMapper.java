@@ -14,9 +14,11 @@ public class TransparencyMapper {
     public List<RecordResponse> toRecordResponseList(List<TransparencyRecord> records) {
         return records.stream()
                 .map(r -> new RecordResponse(
-                        r.getEventType(), 
-                        r.getDescription(), 
-                        r.getTimestamp()
+                r.getEventType(),
+                r.getDescription(),
+                r.getTimestamp(),
+                r.getRiskScore(),
+                r.getAlgorithmVersion()
                 ))
                 .toList();
     }
@@ -40,7 +42,7 @@ public class TransparencyMapper {
         int totalPages
 ) {
 
-    List<RecordResponse> responseList = toRecordResponseList(records);
+        List<RecordResponse> responseList = toRecordResponseList(records);
 
         return TransparencyResponse.builder()
                 .electionId(electionId)

@@ -41,6 +41,12 @@ public class TransparencyRecord {
     @Lob
     private String details;
 
+    @Column(name = "risk_score")
+    private Integer riskScore;
+
+    @Column(name = "algorithm_version")
+    private String algorithmVersion;
+
     @Column(name = "event_timestamp")
     private Instant eventTimestamp;
 }

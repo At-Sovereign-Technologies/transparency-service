@@ -30,6 +30,7 @@ public class TransparencyService {
     private final RedisCacheAdapter cache;
     private final TransparencyMapper mapper;
     private final ObjectMapper objectMapper;
+    private final FraudRiskCalculatorService fraudRiskCalculatorService;
 
     private static final Logger log = LoggerFactory.getLogger(TransparencyService.class);
 
@@ -59,19 +60,33 @@ public class TransparencyService {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<TransparencyRecord> recordsPage =
-                repository.findByElectionId(electionId, pageable);
+            repository.findByElectionId(electionId, pageable);
+
+        TransparencyResponse response;
 
         if (recordsPage.isEmpty()) {
-            throw new ResourceNotFoundException("No records found");
+            response = TransparencyResponse.builder()
+                .electionId(electionId)
+                .records(java.util.Collections.emptyList())
+                .page(recordsPage.getNumber())
+                .size(recordsPage.getSize())
+                .totalElements(0)
+                .totalPages(0)
+                .build();
+
+            cache.set(key, response);
+            log.info("CACHE STORE - electionId={} page={} (empty)", electionId, page);
+
+            return response;
         }
 
-        TransparencyResponse response = mapper.toResponse(
-                electionId,
-                recordsPage.getContent(),
-                recordsPage.getNumber(),
-                recordsPage.getSize(),
-                recordsPage.getTotalElements(),
-                recordsPage.getTotalPages()
+        response = mapper.toResponse(
+            electionId,
+            recordsPage.getContent(),
+            recordsPage.getNumber(),
+            recordsPage.getSize(),
+            recordsPage.getTotalElements(),
+            recordsPage.getTotalPages()
         );
 
         cache.set(key, response);
@@ -91,8 +106,24 @@ public class TransparencyService {
             // Convert details map to JSON string for storage
             String detailsJson = objectMapper.writeValueAsString(request.getDetails());
 
+            // Determine optional electionId from details (used by dev seeder)
+            Long parsedElectionId = null;
+            if (request.getDetails() != null && request.getDetails().containsKey("electionId")) {
+                Object electionObj = request.getDetails().get("electionId");
+                try {
+                    if (electionObj instanceof Number) {
+                        parsedElectionId = ((Number) electionObj).longValue();
+                    } else if (electionObj instanceof String) {
+                        parsedElectionId = Long.parseLong((String) electionObj);
+                    }
+                } catch (Exception ex) {
+                    log.warn("Unable to parse electionId from details: {}", electionObj);
+                }
+            }
+
             // Build and persist the audit record
             TransparencyRecord record = TransparencyRecord.builder()
+                    .electionId(parsedElectionId)
                     .eventType(request.getEventType())
                     .timestamp(LocalDateTime.ofInstant(request.getTimestamp(), java.time.ZoneOffset.UTC))
                     .provider(request.getOriginComponent())
@@ -101,15 +132,20 @@ public class TransparencyService {
                     .eventTimestamp(request.getTimestamp())
                     .build();
 
+            fraudRiskCalculatorService.calculateRisk(record);
+
             TransparencyRecord saved = repository.save(record);
 
-            log.info("AUDIT EVENT SAVED - eventId={} originComponent={} eventType={} severity={}",
-                    saved.getId(), request.getOriginComponent(), request.getEventType(), request.getSeverity());
+            log.info("AUDIT EVENT SAVED - eventId={} originComponent={} eventType={} severity={} riskScore={} algorithmVersion={}",
+                    saved.getId(), request.getOriginComponent(), request.getEventType(), request.getSeverity(),
+                    saved.getRiskScore(), saved.getAlgorithmVersion());
 
             return EventCreatedResponse.builder()
                     .eventId(saved.getId())
                     .timestamp(request.getTimestamp())
                     .message("Audit event successfully recorded in immutable ledger")
+                    .riskScore(saved.getRiskScore())
+                    .algorithmVersion(saved.getAlgorithmVersion())
                     .build();
 
         } catch (Exception e) {
