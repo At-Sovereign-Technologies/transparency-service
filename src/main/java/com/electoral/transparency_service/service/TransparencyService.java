@@ -38,7 +38,12 @@ public class TransparencyService {
 
         String key = "transparency:" + electionId + ":" + page + ":" + size;
 
-        Object cachedObj = cache.get(key);
+        Object cachedObj = null;
+        try {
+            cachedObj = cache.get(key);
+        } catch (Exception e) {
+            log.warn("CACHE GET ERROR - key={} - {}", key, e.getMessage());
+        }
 
         TransparencyResponse cached = null;
 
@@ -74,8 +79,12 @@ public class TransparencyService {
                 .totalPages(0)
                 .build();
 
-            cache.set(key, response);
-            log.info("CACHE STORE - electionId={} page={} (empty)", electionId, page);
+            try {
+                cache.set(key, response);
+                log.info("CACHE STORE - electionId={} page={} (empty)", electionId, page);
+            } catch (Exception e) {
+                log.warn("CACHE SET ERROR (empty) - key={} - {}", key, e.getMessage());
+            }
 
             return response;
         }
@@ -89,8 +98,12 @@ public class TransparencyService {
             recordsPage.getTotalPages()
         );
 
-        cache.set(key, response);
-        log.info("CACHE STORE - electionId={} page={}", electionId, page);
+        try {
+            cache.set(key, response);
+            log.info("CACHE STORE - electionId={} page={}", electionId, page);
+        } catch (Exception e) {
+            log.warn("CACHE SET ERROR - key={} - {}", key, e.getMessage());
+        }
 
         return response;
     }

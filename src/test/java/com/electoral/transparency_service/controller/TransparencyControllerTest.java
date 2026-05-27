@@ -6,14 +6,28 @@ package com.electoral.transparency_service.controller;
 //             Seguridad (EQ-19)
 // ============================================================
 
+import com.electoral.transparency_service.dto.TransparencyResponse;
+import com.electoral.transparency_service.dto.RecordResponse;
+import com.electoral.transparency_service.service.TransparencyService;
+import com.electoral.transparency_service.exception.ResourceNotFoundException;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(TransparencyController.class)
 @DisplayName("TransparencyController — Integración MockMvc")
 class TransparencyControllerTest {
 
-    /*@Autowired private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
     @MockBean  private TransparencyService service;
 
     // C-01 | EQ-8 | Retorna 200 con JSON válido
@@ -21,10 +35,10 @@ class TransparencyControllerTest {
     void should_return200_when_electionHasRecords() throws Exception {
         TransparencyResponse response = TransparencyResponse.builder()
                 .electionId(1L)
-                .records(List.of(new RecordResponse("VOTO_EMITIDO", "Voto ok", LocalDateTime.now())))
+                .records(List.of(new RecordResponse("VOTO_EMITIDO", "Voto ok", LocalDateTime.now(), null, null)))
                 .build();
 
-        when(service.getRecords(1L)).thenReturn(response);
+        when(service.getRecords(1L, 0, 10)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/transparency").param("electionId", "1"))
                 .andExpect(status().isOk())
@@ -32,10 +46,10 @@ class TransparencyControllerTest {
                 .andExpect(jsonPath("$.records.length()").value(1));
     }
 
-    // C-02 | EQ-19 | Retorna 404 para elección sin registros
+    // C-02 | EQ-19 | Retorna 404 para elección sin registros cuando service lanza excepción
     @Test @DisplayName("C-02 | EQ-19 | Retorna 404 para elección sin registros")
     void should_return404_when_noRecordsFound() throws Exception {
-        when(service.getRecords(999L)).thenThrow(new ResourceNotFoundException("No records found"));
+        when(service.getRecords(999L, 0, 10)).thenThrow(new ResourceNotFoundException("No records found"));
 
         mockMvc.perform(get("/api/v1/transparency").param("electionId", "999"))
                 .andExpect(status().isNotFound());
@@ -60,5 +74,5 @@ class TransparencyControllerTest {
     void should_return400_when_electionIdHasSpecialChars() throws Exception {
         mockMvc.perform(get("/api/v1/transparency").param("electionId", "1-2"))
                 .andExpect(status().isBadRequest());
-    }*/
+    }
 }
